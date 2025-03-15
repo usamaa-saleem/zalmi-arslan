@@ -55,7 +55,8 @@ st.markdown("""
         border: 2px solid #f0f0f0;
         border-radius: 10px;
         padding: 10px;
-        margin-top: 20px;
+        margin-top: 10px;
+        margin-bottom: 10px;
     }
     .success-message {
         padding: 10px;
@@ -68,17 +69,34 @@ st.markdown("""
     .branding-section {
         background-color: #f9f9f9;
         border-radius: 10px;
-        padding: 20px;
-        margin-top: 30px;
+        padding: 15px;
+        margin-top: 20px;
         margin-bottom: 30px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
     }
     .sponsor-title {
         text-align: center;
         font-size: 1.3rem;
         color: #333;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
         font-weight: 600;
+    }
+    /* Style for branding columns */
+    .branding-col img {
+        margin-bottom: 10px;
+        margin-top: 10px;
+        display: block;
+    }
+    /* Make the center column stand out */
+    .center-result h3 {
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    /* Adjust column gap */
+    .row-widget.stHorizontal {
+        gap: 10px !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -232,34 +250,38 @@ def process_submission(image_data, gender, age_range):
                     if response_data.get("status") == "COMPLETED" and "output" in response_data and "result" in response_data["output"]:
                         result_image_url = response_data["output"]["result"][0]
                         
-                        # Display the result image
-                        st.subheader("Generated Result:")
-                        st.markdown(f'<div class="result-img">', unsafe_allow_html=True)
-                        st.image(result_image_url, caption="Generated Image", use_column_width=True)
-                        st.markdown(f'</div>', unsafe_allow_html=True)
-                        
-                        # Provide a link to download the image
-                        st.markdown(f"[Download Generated Image]({result_image_url})", unsafe_allow_html=False)
-                        
-                        # Add branding images
-                        st.markdown("---")
+                        # Add branding images side-by-side with the result
                         st.markdown('<div class="branding-section">', unsafe_allow_html=True)
-                        st.markdown('<p class="sponsor-title">Sponsored by</p>', unsafe_allow_html=True)
+                        st.markdown('<p class="sponsor-title">Zalmi Avatar - Sponsored by</p>', unsafe_allow_html=True)
                         
-                        # Set up the layout with columns
-                        left_col, right_col = st.columns([1, 1])
+                        # Create a three-column layout
+                        left_brand_col, center_result_col, right_brand_col = st.columns([1.2, 2.5, 1.2])
                         
-                        # Image on the left
-                        with left_col:
+                        # Left column - Main branding image
+                        with left_brand_col:
                             try:
+                                st.markdown('<div class="branding-col">', unsafe_allow_html=True)
                                 st.image("Main zalmi main cheezious.png", use_column_width=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
                             except Exception as e:
                                 st.error(f"Error displaying main branding image")
                                 print(f"Error with main branding image: {e}")
                         
-                        # Two images stacked on the right
-                        with right_col:
-                            # Create two rows within the right column
+                        # Center column - Generated result
+                        with center_result_col:
+                            st.markdown('<div class="center-result">', unsafe_allow_html=True)
+                            st.subheader("Generated Result:")
+                            st.markdown(f'<div class="result-img">', unsafe_allow_html=True)
+                            st.image(result_image_url, caption="Generated Image", use_column_width=True)
+                            st.markdown(f'</div>', unsafe_allow_html=True)
+                            
+                            # Provide a link to download the image
+                            st.markdown(f"[Download Generated Image]({result_image_url})", unsafe_allow_html=False)
+                            st.markdown('</div>', unsafe_allow_html=True)
+                        
+                        # Right column - Two stacked logos
+                        with right_brand_col:
+                            st.markdown('<div class="branding-col">', unsafe_allow_html=True)
                             try:
                                 st.image("zalmi-logo-black.png", use_column_width=True)
                             except Exception as e:
@@ -271,6 +293,7 @@ def process_submission(image_data, gender, age_range):
                             except Exception as e:
                                 st.error(f"Error displaying cheezious logo")
                                 print(f"Error with cheezious logo: {e}")
+                            st.markdown('</div>', unsafe_allow_html=True)
                         
                         st.markdown('</div>', unsafe_allow_html=True)
                     else:

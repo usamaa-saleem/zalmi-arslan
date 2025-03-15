@@ -1,14 +1,15 @@
 import streamlit as st
 import io
 import json
+import os
 import requests
 from PIL import Image
 import time
 from firebase_utils import upload_image
 
-# API Configuration
-API_ENDPOINT = "https://api.runpod.ai/v2/f4hs5vki2ff7jm/runsync"
-API_KEY = "rpa_AJZLDU6PQBNW7H6AWJ3EHRXL8RKNEVAT10FSTE8U7ts2rx"
+# API Configuration - get from environment or use defaults
+API_ENDPOINT = os.environ.get('API_ENDPOINT', 'https://api.runpod.ai/v2/f4hs5vki2ff7jm/runsync')
+API_KEY = os.environ.get('API_KEY', 'rpa_AJZLDU6PQBNW7H6AWJ3EHRXL8RKNEVAT10FSTE8U7ts2rx')
 
 # Set page configuration
 st.set_page_config(

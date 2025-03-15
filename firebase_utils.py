@@ -1,9 +1,9 @@
 import os
 import time
 import uuid
+import json
 import firebase_admin
 from firebase_admin import credentials, storage
-import json
 
 # Path to your Firebase credentials file
 CREDENTIALS_PATH = os.path.join(os.path.dirname(__file__), "firebase_credentials.json")
@@ -11,13 +11,27 @@ CREDENTIALS_PATH = os.path.join(os.path.dirname(__file__), "firebase_credentials
 def initialize_firebase():
     """Initialize Firebase app if not already initialized"""
     if not firebase_admin._apps:
-        if os.path.exists(CREDENTIALS_PATH):
-            cred = credentials.Certificate(CREDENTIALS_PATH)
+        try:
+            # First, try to get credentials from environment variable (for production/deployment)
+            firebase_creds_json = os.environ.get('FIREBASE_CREDENTIALS')
+            if firebase_creds_json:
+                cred_dict = json.loads(firebase_creds_json)
+                cred = credentials.Certificate(cred_dict)
+                project_id = cred_dict.get('project_id')
+            # Otherwise, try to load from local file (for development)
+            elif os.path.exists(CREDENTIALS_PATH):
+                cred = credentials.Certificate(CREDENTIALS_PATH)
+                with open(CREDENTIALS_PATH, 'r') as f:
+                    project_id = json.load(f).get('project_id')
+            else:
+                raise FileNotFoundError("Firebase credentials not found. Please make sure firebase_credentials.json exists or set FIREBASE_CREDENTIALS environment variable.")
+            
+            # Initialize the app with the credentials
             firebase_admin.initialize_app(cred, {
-                'storageBucket': "arslan-zalmi.firebasestorage.app"
+                'storageBucket': f"{project_id}.appspot.com"
             })
-        else:
-            raise FileNotFoundError("Firebase credentials file not found. Please make sure firebase_credentials.json exists.")
+        except Exception as e:
+            raise Exception(f"Error initializing Firebase: {str(e)}")
 
 def upload_image(image_data, image_format='jpeg'):
     """

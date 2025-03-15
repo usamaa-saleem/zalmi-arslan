@@ -40,5 +40,5 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Firebase credentials (should be handled securely in production)
-# firebase_credentials.json 
+# Firebase credentials (for security)
+firebase_credentials.json 

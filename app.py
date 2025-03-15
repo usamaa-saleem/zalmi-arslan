@@ -3,13 +3,20 @@ import io
 import json
 import os
 import requests
+import base64
 from PIL import Image
 import time
-from firebase_utils import upload_image
 
-# API Configuration - get from environment or use defaults
-API_ENDPOINT = os.environ.get('API_ENDPOINT', 'https://api.runpod.ai/v2/f4hs5vki2ff7jm/runsync')
-API_KEY = os.environ.get('API_KEY', 'rpa_AJZLDU6PQBNW7H6AWJ3EHRXL8RKNEVAT10FSTE8U7ts2rx')
+# API Configuration - try to get from streamlit secrets first, then environment variables, then default
+try:
+    API_ENDPOINT = st.secrets["API_ENDPOINT"]
+except:
+    API_ENDPOINT = os.environ.get("API_ENDPOINT", "https://api.runpod.ai/v2/f4hs5vki2ff7jm/runsync")
+
+try:
+    API_KEY = st.secrets["API_KEY"]
+except:
+    API_KEY = os.environ.get("API_KEY", "rpa_AJZLDU6PQBNW7H6AWJ3EHRXL8RKNEVAT10FSTE8U7ts2rx")
 
 # Set page configuration
 st.set_page_config(
@@ -57,6 +64,72 @@ st.markdown("""
 st.title("Zalmi Face Swap")
 st.write("Upload an image or take a photo, select gender and age, then submit.")
 
+# Debug section for administrators
+if st.sidebar.checkbox("Show Debug Info", False):
+    st.sidebar.subheader("API Configuration Debug")
+    
+    # Check API keys
+    try:
+        api_endpoint = st.secrets["API_ENDPOINT"]
+        st.sidebar.success(f"API_ENDPOINT found in secrets")
+    except:
+        st.sidebar.warning("API_ENDPOINT not found in secrets, using fallback")
+        
+    try:
+        api_key = st.secrets["API_KEY"]
+        st.sidebar.success(f"API_KEY found in secrets")
+    except:
+        st.sidebar.warning("API_KEY not found in secrets, using fallback")
+    
+    # Add information about base64 encoding
+    st.sidebar.subheader("Image Processing")
+    st.sidebar.info("Using base64 encoding for images")
+    
+    # Add max request size information
+    st.sidebar.info("Note: Large images will result in large request payloads")
+    st.sidebar.warning("API may have limits on request size")
+    
+    # Add sample code for debugging
+    if st.sidebar.checkbox("Show sample code", False):
+        st.sidebar.code("""
+# Python code to convert an image to base64
+import base64
+with open('image.jpg', 'rb') as img_file:
+    base64_string = base64.b64encode(img_file.read()).decode('utf-8')
+        """)
+
+# Function to resize image if needed (to reduce base64 string size)
+def resize_image_if_needed(img, max_size=(800, 800), quality=85):
+    """
+    Resize image if it exceeds max_size and convert to JPEG with given quality.
+    This helps reduce the base64 string size which improves API request performance.
+    
+    Args:
+        img: PIL Image object
+        max_size: Tuple of (width, height) - image will not exceed these dimensions
+        quality: JPEG quality (1-100)
+        
+    Returns:
+        Image bytes in JPEG format
+    """
+    # Check if image needs resizing
+    if img.width > max_size[0] or img.height > max_size[1]:
+        # Calculate new size while maintaining aspect ratio
+        ratio = min(max_size[0] / img.width, max_size[1] / img.height)
+        new_size = (int(img.width * ratio), int(img.height * ratio))
+        img = img.resize(new_size, Image.LANCZOS)
+    
+    # Convert to RGB if image is in RGBA mode (has transparency)
+    if img.mode == 'RGBA':
+        img = img.convert('RGB')
+    
+    # Save as JPEG with specified quality
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format='JPEG', quality=quality)
+    img_byte_arr.seek(0)
+    
+    return img_byte_arr.getvalue()
+
 # Function to process and format the submission
 def process_submission(image_data, gender, age_range):
     # Convert age range to format expected by API
@@ -69,15 +142,27 @@ def process_submission(image_data, gender, age_range):
     
     formatted_age = age_mapping.get(age_range, age_range)
     
-    # Upload image to Firebase and get URL
     try:
-        image_url = upload_image(image_data)
-        st.success("Image uploaded successfully!")
+        # Optimize image size before encoding
+        img = Image.open(io.BytesIO(image_data))
+        optimized_image_data = resize_image_if_needed(img)
         
-        # Create API request body
+        # Convert image data to base64 string
+        base64_image = base64.b64encode(optimized_image_data).decode('utf-8')
+        
+        # Display base64 string size info
+        size_kb = len(base64_image) / 1024
+        if size_kb > 1000:
+            st.info(f"Base64 image size: {size_kb/1024:.2f} MB")
+        else:
+            st.info(f"Base64 image size: {size_kb:.2f} KB")
+            
+        st.success("Image encoded successfully!")
+        
+        # Create API request body with base64 image
         request_body = {
             "input": {
-                "image": image_url,
+                "image": base64_image,
                 "gender": gender.lower(),
                 "age": formatted_age
             }
@@ -142,10 +227,8 @@ with tab1:
         # Display the uploaded image
         st.image(image_pil, caption="Uploaded Image", use_column_width=True)
         
-        # Store image data for later use
-        img_byte_arr = io.BytesIO()
-        image_pil.save(img_byte_arr, format=image_pil.format if image_pil.format else 'JPEG')
-        image_data = img_byte_arr.getvalue()
+        # Store image data for later use (original, will be optimized during processing)
+        image_data = image_bytes
 
 # Tab 2: Capture from Webcam
 with tab2:
@@ -162,10 +245,8 @@ with tab2:
         image_bytes = camera_image.getvalue()
         image_pil = Image.open(io.BytesIO(image_bytes))
         
-        # Store image data for later use
-        img_byte_arr = io.BytesIO()
-        image_pil.save(img_byte_arr, format='JPEG')
-        image_data = img_byte_arr.getvalue()
+        # Store image data for later use (original, will be optimized during processing)
+        image_data = image_bytes
 
 # Sidebar form for user information
 st.sidebar.title("Person Information")
@@ -194,4 +275,4 @@ if submit_button:
 
 # Footer
 st.markdown("---")
-st.markdown("Built with Streamlit and Firebase") 
+st.markdown("Built with Streamlit • Direct API Integration with Base64 Image Encoding") 

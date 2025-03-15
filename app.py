@@ -18,15 +18,21 @@ st.set_page_config(
 # API Configuration - try to get from streamlit secrets first, then environment variables, then default
 try:
     API_ENDPOINT = st.secrets["API_ENDPOINT"]
+    # Log for debugging
+    print(f"Using API_ENDPOINT from secrets: {API_ENDPOINT[:20]}...")
 except:
     # Updated API endpoint based on error messages
     API_ENDPOINT = os.environ.get("API_ENDPOINT", "https://api.runpod.ai/v2/bogdfcwppmeh9x/runsync")
+    print(f"Using fallback API_ENDPOINT: {API_ENDPOINT[:20]}...")
 
 try:
     API_KEY = st.secrets["API_KEY"]
+    # Log for debugging
+    print(f"Using API_KEY from secrets: {API_KEY[:5]}...")
 except:
     # Use more recent API key format if available
     API_KEY = os.environ.get("API_KEY", "rpa_AJZLDU6PQBNW7H6AWJ3EHRXL8RKNEVAT10FSTE8U7ts2rx")
+    print(f"Using fallback API_KEY: {API_KEY[:5]}...")
 
 # Custom CSS for better appearance
 st.markdown("""
@@ -227,6 +233,16 @@ def process_submission(image_data, gender, age_range):
             }
         
         # Set up authorization header based on settings
+        try_without_bearer = False  # Set to True to try without 'Bearer' prefix if in production
+        
+        # Check if we're in production (has secrets configured)
+        try:
+            if 'API_KEY' in st.secrets:
+                # We're likely in production, enable fallback option
+                try_without_bearer = True
+        except:
+            pass
+            
         if debug_mode and st.session_state.get('auth_format') == "API Key Only":
             auth_header = API_KEY
             st.sidebar.info("Using API Key directly without Bearer prefix")
@@ -236,6 +252,7 @@ def process_submission(image_data, gender, age_range):
         # Send request to API
         with st.spinner("Processing your request... This may take a moment."):
             try:
+                # First attempt with default auth header
                 response = requests.post(
                     API_ENDPOINT,
                     json=request_body,
@@ -245,6 +262,31 @@ def process_submission(image_data, gender, age_range):
                     },
                     timeout=60  # Add a 60-second timeout
                 )
+                
+                # If unauthorized in production, try without 'Bearer' prefix
+                if response.status_code == 401 and try_without_bearer and auth_header.startswith("Bearer "):
+                    # Try again with API key only
+                    direct_key = API_KEY
+                    print(f"401 error with Bearer prefix, trying without Bearer prefix...")
+                    print(f"Headers used: {{'Authorization': '[REDACTED]', 'Content-Type': 'application/json'}}")
+                    print(f"Status code: {response.status_code}")
+                    try:
+                        print(f"Response body: {response.json()}")
+                    except:
+                        print(f"Response text: {response.text}")
+                    
+                    response = requests.post(
+                        API_ENDPOINT,
+                        json=request_body,
+                        headers={
+                            "Authorization": direct_key,
+                            "Content-Type": "application/json"
+                        },
+                        timeout=60
+                    )
+                    
+                    # Log result of second attempt
+                    print(f"Second attempt status code: {response.status_code}")
                 
                 # Check if request was successful
                 if response.status_code == 200:
@@ -266,6 +308,15 @@ def process_submission(image_data, gender, age_range):
                         st.error("The API response did not contain a valid result.")
                 else:
                     st.error(f"API request failed with status code {response.status_code}")
+                    # Log detailed error info
+                    print(f"API request failed with status code {response.status_code}")
+                    print(f"API endpoint: {API_ENDPOINT}")
+                    print(f"Auth header type: {'Direct Key' if auth_header == API_KEY else 'Bearer Token'}")
+                    try:
+                        error_body = response.json()
+                        print(f"Error response: {error_body}")
+                    except:
+                        print(f"Error text: {response.text}")
                     
                     # Show detailed error information only in debug mode
                     if debug_mode:
@@ -290,7 +341,7 @@ def process_submission(image_data, gender, age_range):
                             elif response.status_code == 413:
                                 st.warning("**413 Payload Too Large**: Your base64 image is too large.")
                                 st.info("Try reducing the image size or quality further.")
-                            
+                
             except requests.exceptions.RequestException as e:
                 st.error(f"Request error: {str(e)}")
         

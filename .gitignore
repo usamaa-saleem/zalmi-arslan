@@ -38,7 +38,4 @@ ENV/
 
 # OS specific
 .DS_Store
-Thumbs.db
-
-# Firebase credentials (for security)
-firebase_credentials.json 
+Thumbs.db 

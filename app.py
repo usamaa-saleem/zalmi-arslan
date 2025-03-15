@@ -11,7 +11,7 @@ import time
 st.set_page_config(
     page_title="Zalmi Avatar",
     page_icon="📸",
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="expanded"
 )
 
@@ -38,7 +38,8 @@ except:
 st.markdown("""
 <style>
     .main {
-        padding: 2rem;
+        padding: 1rem;
+        max-width: 1200px !important;
     }
     .stButton > button {
         width: 100%;
@@ -69,34 +70,51 @@ st.markdown("""
     .branding-section {
         background-color: #f9f9f9;
         border-radius: 10px;
-        padding: 15px;
+        padding: 20px;
         margin-top: 20px;
         margin-bottom: 30px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         display: flex;
         flex-direction: column;
+        width: 100%;
     }
     .sponsor-title {
         text-align: center;
-        font-size: 1.3rem;
+        font-size: 1.5rem;
         color: #333;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
         font-weight: 600;
     }
     /* Style for branding columns */
     .branding-col img {
-        margin-bottom: 10px;
-        margin-top: 10px;
+        margin-bottom: 15px;
+        margin-top: 15px;
         display: block;
+        min-height: 150px;
+        object-fit: contain;
     }
     /* Make the center column stand out */
     .center-result h3 {
         text-align: center;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.8rem;
+        font-size: 1.3rem;
     }
-    /* Adjust column gap */
+    /* Adjust column gap and width */
     .row-widget.stHorizontal {
-        gap: 10px !important;
+        gap: 15px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    /* Ensure the container uses full width */
+    .block-container {
+        max-width: 100% !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    /* Make all columns stretch to use available space */
+    [data-testid="column"] {
+        width: 100% !important;
+        flex: 1 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -255,7 +273,7 @@ def process_submission(image_data, gender, age_range):
                         st.markdown('<p class="sponsor-title">Zalmi Avatar - Sponsored by</p>', unsafe_allow_html=True)
                         
                         # Create a three-column layout
-                        left_brand_col, center_result_col, right_brand_col = st.columns([1.2, 2.5, 1.2])
+                        left_brand_col, center_result_col, right_brand_col = st.columns([1.5, 2, 1.5])
                         
                         # Left column - Main branding image
                         with left_brand_col:
@@ -276,7 +294,9 @@ def process_submission(image_data, gender, age_range):
                             st.markdown(f'</div>', unsafe_allow_html=True)
                             
                             # Provide a link to download the image
+                            st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
                             st.markdown(f"[Download Generated Image]({result_image_url})", unsafe_allow_html=False)
+                            st.markdown('</div>', unsafe_allow_html=True)
                             st.markdown('</div>', unsafe_allow_html=True)
                         
                         # Right column - Two stacked logos

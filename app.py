@@ -72,14 +72,30 @@ if st.sidebar.checkbox("Show Debug Info", False):
     try:
         api_endpoint = st.secrets["API_ENDPOINT"]
         st.sidebar.success(f"API_ENDPOINT found in secrets")
+        st.sidebar.text(f"Endpoint: {api_endpoint[:20]}...")
     except:
+        default_endpoint = os.environ.get("API_ENDPOINT", "https://api.runpod.ai/v2/f4hs5vki2ff7jm/runsync")
         st.sidebar.warning("API_ENDPOINT not found in secrets, using fallback")
+        st.sidebar.text(f"Fallback endpoint: {default_endpoint[:20]}...")
         
     try:
         api_key = st.secrets["API_KEY"]
         st.sidebar.success(f"API_KEY found in secrets")
+        st.sidebar.text(f"Key starts with: {api_key[:5]}...")
     except:
+        default_key = os.environ.get("API_KEY", "rpa_AJZLDU6PQBNW7H6AWJ3EHRXL8RKNEVAT10FSTE8U7ts2rx")
         st.sidebar.warning("API_KEY not found in secrets, using fallback")
+        st.sidebar.text(f"Fallback key starts with: {default_key[:5]}...")
+        
+    # Show API test section
+    st.sidebar.subheader("API Test Options")
+    auth_format = st.sidebar.radio("Authorization Format", ["Bearer Token", "API Key Only"])
+    image_format = st.sidebar.radio("Image Format", ["Base64 Encoded", "URL (Placeholder)"])
+    body_format = st.sidebar.radio("Request Body Format", [
+        "Standard: {input:{image, gender, age}}", 
+        "Flat: {image, gender, age}",
+        "Custom: {data:{image}, parameters:{gender, age}}"
+    ])
     
     # Add information about base64 encoding
     st.sidebar.subheader("Image Processing")
@@ -159,47 +175,139 @@ def process_submission(image_data, gender, age_range):
             
         st.success("Image encoded successfully!")
         
-        # Create API request body with base64 image
-        request_body = {
-            "input": {
-                "image": base64_image,
-                "gender": gender.lower(),
-                "age": formatted_age
-            }
-        }
+        # Get the image value (either base64 or URL)
+        if st.sidebar.checkbox("Show Debug Info", False) and st.sidebar.radio("Image Format", ["Base64 Encoded", "URL (Placeholder)"]) == "URL (Placeholder)":
+            # Use a placeholder URL instead of base64
+            image_value = "https://example.com/placeholder.jpg"
+            st.info("Using URL placeholder instead of base64 image")
+        else:
+            # Use base64 image
+            image_value = base64_image
         
+        # Create request body based on selected format
+        if st.sidebar.checkbox("Show Debug Info", False):
+            body_format = st.sidebar.radio("Request Body Format", [
+                "Standard: {input:{image, gender, age}}", 
+                "Flat: {image, gender, age}",
+                "Custom: {data:{image}, parameters:{gender, age}}"
+            ])
+            
+            if body_format == "Flat: {image, gender, age}":
+                request_body = {
+                    "image": image_value,
+                    "gender": gender.lower(),
+                    "age": formatted_age
+                }
+            elif body_format == "Custom: {data:{image}, parameters:{gender, age}}":
+                request_body = {
+                    "data": {
+                        "image": image_value
+                    },
+                    "parameters": {
+                        "gender": gender.lower(),
+                        "age": formatted_age
+                    }
+                }
+            else:  # Standard
+                request_body = {
+                    "input": {
+                        "image": image_value,
+                        "gender": gender.lower(),
+                        "age": formatted_age
+                    }
+                }
+        else:
+            # Use standard format
+            request_body = {
+                "input": {
+                    "image": image_value,
+                    "gender": gender.lower(),
+                    "age": formatted_age
+                }
+            }
+        
+        # Set up authorization header based on settings
+        if st.sidebar.checkbox("Show Debug Info", False) and st.sidebar.radio("Authorization Format", ["Bearer Token", "API Key Only"]) == "API Key Only":
+            auth_header = API_KEY
+            st.sidebar.info("Using API Key directly without Bearer prefix")
+        else:
+            auth_header = f"Bearer {API_KEY}"
+        
+        # Debug info about the request
+        with st.expander("Request Details", expanded=False):
+            st.write("**API Endpoint:**")
+            st.code(API_ENDPOINT)
+            st.write("**Authorization Header Format:**")
+            st.code(f"Authorization: {auth_header[:10]}...")
+            st.write("**Request Body Structure:**")
+            truncated_payload = {
+                "input": {
+                    "image": f"{image_value[:20]}... (truncated)",
+                    "gender": gender.lower(),
+                    "age": formatted_age
+                }
+            }
+            st.json(truncated_payload)
+            
         # Send request to API
         with st.spinner("Processing your request... This may take a moment."):
-            response = requests.post(
-                API_ENDPOINT,
-                json=request_body,
-                headers={
-                    "Authorization": f"Bearer {API_KEY}",
-                    "Content-Type": "application/json"
-                }
-            )
-            
-            # Check if request was successful
-            if response.status_code == 200:
-                response_data = response.json()
+            try:
+                response = requests.post(
+                    API_ENDPOINT,
+                    json=request_body,
+                    headers={
+                        "Authorization": auth_header,
+                        "Content-Type": "application/json"
+                    },
+                    timeout=60  # Add a 60-second timeout
+                )
                 
-                # Check if response contains the expected result
-                if response_data.get("status") == "COMPLETED" and "output" in response_data and "result" in response_data["output"]:
-                    result_image_url = response_data["output"]["result"][0]
+                # Check if request was successful
+                if response.status_code == 200:
+                    response_data = response.json()
                     
-                    # Display the result image
-                    st.subheader("Generated Result:")
-                    st.markdown(f'<div class="result-img">', unsafe_allow_html=True)
-                    st.image(result_image_url, caption="Generated Image", use_column_width=True)
-                    st.markdown(f'</div>', unsafe_allow_html=True)
-                    
-                    # Provide a link to download the image
-                    st.markdown(f"[Download Generated Image]({result_image_url})", unsafe_allow_html=False)
+                    # Check if response contains the expected result
+                    if response_data.get("status") == "COMPLETED" and "output" in response_data and "result" in response_data["output"]:
+                        result_image_url = response_data["output"]["result"][0]
+                        
+                        # Display the result image
+                        st.subheader("Generated Result:")
+                        st.markdown(f'<div class="result-img">', unsafe_allow_html=True)
+                        st.image(result_image_url, caption="Generated Image", use_column_width=True)
+                        st.markdown(f'</div>', unsafe_allow_html=True)
+                        
+                        # Provide a link to download the image
+                        st.markdown(f"[Download Generated Image]({result_image_url})", unsafe_allow_html=False)
+                    else:
+                        st.error("The API response did not contain a valid result.")
                 else:
-                    st.error("The API response did not contain a valid result.")
-            else:
-                st.error(f"API request failed with status code {response.status_code}")
-                st.error(f"Error message: {response.text}")
+                    st.error(f"API request failed with status code {response.status_code}")
+                    
+                    # Show detailed error information
+                    with st.expander("Error Details", expanded=True):
+                        st.write("**Response Headers:**")
+                        st.json(dict(response.headers))
+                        
+                        st.write("**Error Message:**")
+                        try:
+                            error_json = response.json()
+                            st.json(error_json)
+                        except:
+                            st.code(response.text)
+                        
+                        # Provide common error explanations
+                        if response.status_code == 401:
+                            st.warning("**401 Unauthorized**: This usually means your API key is invalid or incorrectly formatted.")
+                            st.info("Things to check: \n1. Make sure your API key is correct\n2. Check if the authorization format should be 'Bearer TOKEN' or just 'TOKEN'\n3. Verify you're using the correct API endpoint")
+                        elif response.status_code == 400:
+                            st.warning("**400 Bad Request**: The API didn't understand your request format.")
+                            st.info("The API might not accept base64 encoded images directly. You may need to revert to URL-based images.")
+                        elif response.status_code == 413:
+                            st.warning("**413 Payload Too Large**: Your base64 image is too large.")
+                            st.info("Try reducing the image size or quality further.")
+                            
+            except requests.exceptions.RequestException as e:
+                st.error(f"Request error: {str(e)}")
         
         return request_body
         

@@ -65,6 +65,21 @@ st.markdown("""
         margin: 10px 0;
         font-weight: bold;
     }
+    .branding-section {
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .sponsor-title {
+        text-align: center;
+        font-size: 1.3rem;
+        color: #333;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -103,6 +118,23 @@ def resize_image_if_needed(img, max_size=(800, 800), quality=85):
     img_byte_arr.seek(0)
     
     return img_byte_arr.getvalue()
+
+# Function to safely load image from file
+def load_image_safely(image_path):
+    """
+    Load an image file safely, with error handling.
+    
+    Args:
+        image_path: Path to the image file
+        
+    Returns:
+        PIL.Image object or None if the image could not be loaded
+    """
+    try:
+        return Image.open(image_path)
+    except Exception as e:
+        print(f"Error loading image {image_path}: {e}")
+        return None
 
 # Function to process and format the submission
 def process_submission(image_data, gender, age_range):
@@ -208,6 +240,39 @@ def process_submission(image_data, gender, age_range):
                         
                         # Provide a link to download the image
                         st.markdown(f"[Download Generated Image]({result_image_url})", unsafe_allow_html=False)
+                        
+                        # Add branding images
+                        st.markdown("---")
+                        st.markdown('<div class="branding-section">', unsafe_allow_html=True)
+                        st.markdown('<p class="sponsor-title">Sponsored by</p>', unsafe_allow_html=True)
+                        
+                        # Set up the layout with columns
+                        left_col, right_col = st.columns([1, 1])
+                        
+                        # Image on the left
+                        with left_col:
+                            try:
+                                st.image("Main zalmi main cheezious.png", use_column_width=True)
+                            except Exception as e:
+                                st.error(f"Error displaying main branding image")
+                                print(f"Error with main branding image: {e}")
+                        
+                        # Two images stacked on the right
+                        with right_col:
+                            # Create two rows within the right column
+                            try:
+                                st.image("zalmi-logo-black.png", use_column_width=True)
+                            except Exception as e:
+                                st.error(f"Error displaying zalmi logo")
+                                print(f"Error with zalmi logo: {e}")
+                                
+                            try:
+                                st.image("cheezious_logo[1].png", use_column_width=True)
+                            except Exception as e:
+                                st.error(f"Error displaying cheezious logo")
+                                print(f"Error with cheezious logo: {e}")
+                        
+                        st.markdown('</div>', unsafe_allow_html=True)
                     else:
                         st.error("The API response did not contain a valid result.")
                 else:
@@ -277,4 +342,3 @@ if submit_button:
 
 # Footer
 st.markdown("---")
-st.markdown("Built with Streamlit • Direct API Integration with Base64 Image Encoding") 

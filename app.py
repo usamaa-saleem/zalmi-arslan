@@ -69,9 +69,11 @@ st.markdown("""
         background-color: #f9f9f9;
         border-radius: 10px;
         padding: 15px;
-        margin-top: 20px;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .branding-title {
         text-align: center;
@@ -81,10 +83,54 @@ st.markdown("""
         font-weight: 600;
     }
     .branding-image {
-        margin-bottom: 15px;
+        margin: 0 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .branding-image img {
+        max-height: 100px;
+        object-fit: contain;
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Add branding section at the top
+st.markdown('<div class="branding-section">', unsafe_allow_html=True)
+# Create three columns for branding
+col1, col2, col3 = st.columns(3)
+
+# First logo
+with col1:
+    try:
+        st.markdown('<div class="branding-image">', unsafe_allow_html=True)
+        st.image("Main zalmi main cheezious.png", use_column_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Error displaying main branding image")
+        print(f"Error with main branding image: {e}")
+
+# Second logo
+with col2:
+    try:
+        st.markdown('<div class="branding-image">', unsafe_allow_html=True)
+        st.image("zalmi-logo-black.png", use_column_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Error displaying zalmi logo")
+        print(f"Error with zalmi logo: {e}")
+
+# Third logo
+with col3:
+    try:
+        st.markdown('<div class="branding-image">', unsafe_allow_html=True)
+        st.image("cheezious_logo[1].png", use_column_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Error displaying cheezious logo")
+        print(f"Error with cheezious logo: {e}")
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Title and description
 st.title("Zalmi Avatar")
@@ -222,44 +268,6 @@ def process_submission(image_data, gender, age_range):
                             f"<div style='text-align: center;'><a href='{result_image_url}' style='font-size:16px; text-decoration:none;'>Download Generated Image</a></div>",
                             unsafe_allow_html=True
                         )
-                        
-                        # Add branding section
-                        # st.markdown('<div class="branding-section">', unsafe_allow_html=True)
-                        st.markdown("---")
-                        st.markdown('<p class="branding-title">Sponsored by</p>', unsafe_allow_html=True)
-                        
-                        # Create two columns for branding
-                        left_col, right_col = st.columns(2)
-                        
-                        # Left column - single image
-                        with left_col:
-                            try:
-                                st.markdown('<div class="branding-image">', unsafe_allow_html=True)
-                                st.image("Main zalmi main cheezious.png", use_column_width=True)
-                                st.markdown('</div>', unsafe_allow_html=True)
-                            except Exception as e:
-                                st.error(f"Error displaying main branding image")
-                                print(f"Error with main branding image: {e}")
-                        
-                        # Right column - two stacked images
-                        with right_col:
-                            try:
-                                st.markdown('<div class="branding-image">', unsafe_allow_html=True)
-                                st.image("zalmi-logo-black.png", use_column_width=True)
-                                st.markdown('</div>', unsafe_allow_html=True)
-                            except Exception as e:
-                                st.error(f"Error displaying zalmi logo")
-                                print(f"Error with zalmi logo: {e}")
-                                
-                            try:
-                                st.markdown('<div class="branding-image">', unsafe_allow_html=True)
-                                st.image("cheezious_logo[1].png", use_column_width=True)
-                                st.markdown('</div>', unsafe_allow_html=True)
-                            except Exception as e:
-                                st.error(f"Error displaying cheezious logo")
-                                print(f"Error with cheezious logo: {e}")
-                        
-                        st.markdown('</div>', unsafe_allow_html=True)
                     else:
                         st.error("The API response did not contain a valid result.")
                 else:

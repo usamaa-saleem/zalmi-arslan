@@ -11,7 +11,7 @@ import time
 try:
     API_ENDPOINT = st.secrets["API_ENDPOINT"]
 except:
-    API_ENDPOINT = os.environ.get("API_ENDPOINT", "https://api.runpod.ai/v2/f4hs5vki2ff7jm/runsync")
+    API_ENDPOINT = os.environ.get("API_ENDPOINT", "https://api.runpod.ai/v2/bogdfcwppmeh9x/runsync")
 
 try:
     API_KEY = st.secrets["API_KEY"]

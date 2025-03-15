@@ -95,7 +95,9 @@ with st.expander("⚙️ API Configuration Help", expanded=False):
     """, unsafe_allow_html=True)
 
 # Debug section for administrators
-if st.sidebar.checkbox("Show Debug Info", False):
+debug_mode = st.sidebar.checkbox("Show Debug Info", False, key="debug_main")
+
+if debug_mode:
     st.sidebar.subheader("API Configuration Debug")
     
     # Check API keys
@@ -119,13 +121,13 @@ if st.sidebar.checkbox("Show Debug Info", False):
         
     # Show API test section
     st.sidebar.subheader("API Test Options")
-    auth_format = st.sidebar.radio("Authorization Format", ["Bearer Token", "API Key Only"])
-    image_format = st.sidebar.radio("Image Format", ["Base64 Encoded", "URL (Placeholder)"])
+    auth_format = st.sidebar.radio("Authorization Format", ["Bearer Token", "API Key Only"], key="auth_format")
+    image_format = st.sidebar.radio("Image Format", ["Base64 Encoded", "URL (Placeholder)"], key="image_format")
     body_format = st.sidebar.radio("Request Body Format", [
         "Standard: {input:{image, gender, age}}", 
         "Flat: {image, gender, age}",
         "Custom: {data:{image}, parameters:{gender, age}}"
-    ])
+    ], key="body_format")
     
     # Add information about base64 encoding
     st.sidebar.subheader("Image Processing")
@@ -136,7 +138,7 @@ if st.sidebar.checkbox("Show Debug Info", False):
     st.sidebar.warning("API may have limits on request size")
     
     # Add sample code for debugging
-    if st.sidebar.checkbox("Show sample code", False):
+    if st.sidebar.checkbox("Show sample code", False, key="show_sample_code"):
         st.sidebar.code("""
 # Python code to convert an image to base64
 import base64
@@ -206,7 +208,7 @@ def process_submission(image_data, gender, age_range):
         st.success("Image encoded successfully!")
         
         # Get the image value (either base64 or URL)
-        if st.sidebar.checkbox("Show Debug Info", False) and st.sidebar.radio("Image Format", ["Base64 Encoded", "URL (Placeholder)"]) == "URL (Placeholder)":
+        if debug_mode and st.session_state.get('image_format') == "URL (Placeholder)":
             # Use a placeholder URL instead of base64
             image_value = "https://example.com/placeholder.jpg"
             st.info("Using URL placeholder instead of base64 image")
@@ -215,20 +217,16 @@ def process_submission(image_data, gender, age_range):
             image_value = base64_image
         
         # Create request body based on selected format
-        if st.sidebar.checkbox("Show Debug Info", False):
-            body_format = st.sidebar.radio("Request Body Format", [
-                "Standard: {input:{image, gender, age}}", 
-                "Flat: {image, gender, age}",
-                "Custom: {data:{image}, parameters:{gender, age}}"
-            ])
+        if debug_mode:
+            selected_body_format = st.session_state.get('body_format', "Standard: {input:{image, gender, age}}")
             
-            if body_format == "Flat: {image, gender, age}":
+            if selected_body_format == "Flat: {image, gender, age}":
                 request_body = {
                     "image": image_value,
                     "gender": gender.lower(),
                     "age": formatted_age
                 }
-            elif body_format == "Custom: {data:{image}, parameters:{gender, age}}":
+            elif selected_body_format == "Custom: {data:{image}, parameters:{gender, age}}":
                 request_body = {
                     "data": {
                         "image": image_value
@@ -257,7 +255,7 @@ def process_submission(image_data, gender, age_range):
             }
         
         # Set up authorization header based on settings
-        if st.sidebar.checkbox("Show Debug Info", False) and st.sidebar.radio("Authorization Format", ["Bearer Token", "API Key Only"]) == "API Key Only":
+        if debug_mode and st.session_state.get('auth_format') == "API Key Only":
             auth_header = API_KEY
             st.sidebar.info("Using API Key directly without Bearer prefix")
         else:

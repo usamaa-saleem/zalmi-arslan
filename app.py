@@ -9,7 +9,7 @@ import time
 
 # Set page configuration (must be the first Streamlit command)
 st.set_page_config(
-    page_title="Zalmi Face Swap",
+    page_title="Zalmi Avatar",
     page_icon="📸",
     layout="centered",
     initial_sidebar_state="expanded"
@@ -69,8 +69,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Title and description
-st.title("Zalmi Face Swap")
-st.write("Upload an image or take a photo, select gender and age, then submit.")
+st.title("Zalmi Avatar")
+st.write("Take a photo, select gender and age, then submit.")
 
 # Function to resize image if needed (to reduce base64 string size)
 def resize_image_if_needed(img, max_size=(800, 800), quality=85):
@@ -226,46 +226,29 @@ def process_submission(image_data, gender, age_range):
         st.error(f"Error during processing: {str(e)}")
         return None
 
-# Create tabs for different input methods
-tab1, tab2 = st.tabs(["Upload Image", "Capture from Webcam"])
-
 # Image storage variable
 image_data = None
 image_pil = None
 
-# Tab 1: Upload Image
-with tab1:
-    st.markdown('<p class="upload-header">Upload an Image</p>', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
-    
-    if uploaded_file is not None:
-        # Read the file and convert to bytes
-        image_bytes = uploaded_file.getvalue()
-        image_pil = Image.open(io.BytesIO(image_bytes))
-        
-        # Display the uploaded image
-        st.image(image_pil, caption="Uploaded Image", use_column_width=True)
-        
-        # Store image data for later use (original, will be optimized during processing)
-        image_data = image_bytes
+# Webcam capture section
+st.markdown('<p class="upload-header">Capture from Webcam</p>', unsafe_allow_html=True)
 
-# Tab 2: Capture from Webcam
-with tab2:
-    st.markdown('<p class="upload-header">Capture from Webcam</p>', unsafe_allow_html=True)
+# Use Streamlit's native camera input for smooth webcam functionality
+camera_image = st.camera_input("Take a picture", key="camera")
+
+if camera_image is not None:
+    # Display success message
+    st.markdown('<div class="success-message">Image captured successfully!</div>', unsafe_allow_html=True)
     
-    # Use Streamlit's native camera input for smooth webcam functionality
-    camera_image = st.camera_input("Take a picture", key="camera")
+    # Process the captured image
+    image_bytes = camera_image.getvalue()
+    image_pil = Image.open(io.BytesIO(image_bytes))
     
-    if camera_image is not None:
-        # Display success message
-        st.markdown('<div class="success-message">Image captured successfully!</div>', unsafe_allow_html=True)
-        
-        # Process the captured image
-        image_bytes = camera_image.getvalue()
-        image_pil = Image.open(io.BytesIO(image_bytes))
-        
-        # Store image data for later use (original, will be optimized during processing)
-        image_data = image_bytes
+    # Display the captured image
+    st.image(image_pil, caption="Captured Image", use_column_width=True)
+    
+    # Store image data for later use (original, will be optimized during processing)
+    image_data = image_bytes
 
 # Sidebar form for user information
 st.sidebar.title("Person Information")
@@ -284,7 +267,7 @@ with st.sidebar.form(key="user_info_form"):
 # Process form submission
 if submit_button:
     if image_data is None:
-        st.error("Please upload or capture an image first")
+        st.error("Please capture an image first")
     else:
         # Process the submission
         result = process_submission(image_data, gender, age_range)

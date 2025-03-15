@@ -1,0 +1,54 @@
+# Instructions for Pushing Code to GitHub
+
+The current issue with pushing to GitHub is related to the sensitive Firebase credentials that were included in the initial commit. GitHub has security scanning that blocks pushes containing service account credentials.
+
+## Option 1: Allow the Specific Secret in GitHub
+
+1. Visit the link that GitHub provides in the error message:
+   https://github.com/usamaa-saleem/zalmi-arslan/security/secret-scanning/unblock-secret/2uM2la7Hc7Dw3qEYMhpqzWjam0E
+
+2. Follow the instructions to allow the secret to be pushed. This tells GitHub you're aware of the credential and are intentionally allowing it to be published.
+
+3. After allowing the secret, try pushing again:
+   ```
+   git push -u origin main
+   ```
+
+## Option 2: Create a New Repository
+
+If you prefer not to push the credentials at all (recommended):
+
+1. Create a new GitHub repository with a different name (e.g., "zalmi-face-swap")
+
+2. Push to this new repository:
+   ```
+   git remote set-url origin https://github.com/usamaa-saleem/zalmi-face-swap.git
+   git push -u origin main
+   ```
+
+## Option 3: Force Push (Not Recommended for Shared Repositories)
+
+As a last resort, you can force push the current state of the repository, which will overwrite the remote history:
+
+```
+git push -f origin main
+```
+
+Note: This is potentially dangerous if others are already using the repository, as it rewrites history.
+
+## Deployment to Streamlit Cloud
+
+1. Log in to Streamlit Cloud: https://streamlit.io/cloud
+
+2. Click "New app"
+
+3. Connect your GitHub repository
+
+4. Add the following secrets in the Streamlit Cloud dashboard:
+   - FIREBASE_CREDENTIALS: Contents of your firebase_credentials.json file
+   - API_KEY: Your RunPod API key
+   - API_ENDPOINT: Your RunPod API endpoint (if different from default)
+
+5. Deploy the app
+
+The app will now securely access your credentials from environment variables instead of having them in the code. 

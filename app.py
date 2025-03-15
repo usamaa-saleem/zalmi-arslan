@@ -225,6 +225,7 @@ def process_submission(image_data, gender, age_range):
                         
                         # Add branding section
                         # st.markdown('<div class="branding-section">', unsafe_allow_html=True)
+                        st.markdown("---")
                         st.markdown('<p class="branding-title">Sponsored by</p>', unsafe_allow_html=True)
                         
                         # Create two columns for branding
@@ -304,17 +305,18 @@ if camera_image is not None:
 # Sidebar form for user information
 st.sidebar.title("Person Information")
 
-# Create a form
+# Gender selection outside the form so it can affect the form contents
+gender = st.sidebar.selectbox("Gender", options=["Male", "Female"])
+
+# Age range options depend on gender
+if gender == "Female":
+    age_options = ["Under 20", "20 to 35", "35 to 45"]
+else:
+    age_options = ["Under 20", "20 to 35", "35 to 45", "45+"]
+
+# Create a form for the remaining inputs and submission
 with st.sidebar.form(key="user_info_form"):
-    # Gender selection
-    gender = st.selectbox("Gender", options=["Male", "Female"])
-    
-    # Age range selection - options depend on gender
-    if gender == "Female":
-        age_options = ["Under 20", "20 to 35", "35 to 45"]
-    else:
-        age_options = ["Under 20", "20 to 35", "35 to 45", "45+"]
-    
+    # Age range selection using the options determined by gender
     age_range = st.selectbox("Age Range", options=age_options)
     
     # Submit button

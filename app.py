@@ -65,6 +65,24 @@ st.markdown("""
         margin: 10px 0;
         font-weight: bold;
     }
+    .branding-section {
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .branding-title {
+        text-align: center;
+        font-size: 1.3rem;
+        color: #333;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    .branding-image {
+        margin-bottom: 15px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -123,13 +141,6 @@ def process_submission(image_data, gender, age_range):
         
         # Convert image data to base64 string
         base64_image = base64.b64encode(optimized_image_data).decode('utf-8')
-        
-        # Display base64 string size info
-        size_kb = len(base64_image) / 1024
-        if size_kb > 1000:
-            st.info(f"Base64 image size: {size_kb/1024:.2f} MB")
-        else:
-            st.info(f"Base64 image size: {size_kb:.2f} KB")
             
         # st.success("Image encoded successfully!")
         
@@ -207,8 +218,46 @@ def process_submission(image_data, gender, age_range):
                         st.markdown(f'</div>', unsafe_allow_html=True)
                         
                         # Provide a link to download the image
-                        st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
-                        st.markdown(f"[Download Generated Image]({result_image_url})", unsafe_allow_html=False)
+                        st.markdown(
+                            f"<div style='text-align: center;'><a href='{result_image_url}' style='font-size:16px; text-decoration:none;'>Download Generated Image</a></div>",
+                            unsafe_allow_html=True
+                        )
+                        
+                        # Add branding section
+                        st.markdown('<div class="branding-section">', unsafe_allow_html=True)
+                        st.markdown('<p class="branding-title">Sponsored by</p>', unsafe_allow_html=True)
+                        
+                        # Create two columns for branding
+                        left_col, right_col = st.columns(2)
+                        
+                        # Left column - single image
+                        with left_col:
+                            try:
+                                st.markdown('<div class="branding-image">', unsafe_allow_html=True)
+                                st.image("Main zalmi main cheezious.png", use_column_width=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
+                            except Exception as e:
+                                st.error(f"Error displaying main branding image")
+                                print(f"Error with main branding image: {e}")
+                        
+                        # Right column - two stacked images
+                        with right_col:
+                            try:
+                                st.markdown('<div class="branding-image">', unsafe_allow_html=True)
+                                st.image("zalmi-logo-black.png", use_column_width=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
+                            except Exception as e:
+                                st.error(f"Error displaying zalmi logo")
+                                print(f"Error with zalmi logo: {e}")
+                                
+                            try:
+                                st.markdown('<div class="branding-image">', unsafe_allow_html=True)
+                                st.image("cheezious_logo[1].png", use_column_width=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
+                            except Exception as e:
+                                st.error(f"Error displaying cheezious logo")
+                                print(f"Error with cheezious logo: {e}")
+                        
                         st.markdown('</div>', unsafe_allow_html=True)
                     else:
                         st.error("The API response did not contain a valid result.")
@@ -247,7 +296,7 @@ if camera_image is not None:
     image_pil = Image.open(io.BytesIO(image_bytes))
     
     # Display the captured image
-    st.image(image_pil, caption="Captured Image", use_column_width=True)
+    # st.image(image_pil, caption="Captured Image", use_column_width=True)
     
     # Store image data for later use (original, will be optimized during processing)
     image_data = image_bytes

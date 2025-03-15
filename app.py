@@ -213,7 +213,7 @@ def process_submission(image_data, gender, age_range):
                         
                         # Display the result image
                         st.subheader("Generated Result:")
-                        st.markdown(f'<div class="result-img">', unsafe_allow_html=True)
+                        # st.markdown(f'<div class="result-img">', unsafe_allow_html=True)
                         st.image(result_image_url, caption="Generated Image", use_column_width=True)
                         st.markdown(f'</div>', unsafe_allow_html=True)
                         
@@ -224,7 +224,7 @@ def process_submission(image_data, gender, age_range):
                         )
                         
                         # Add branding section
-                        st.markdown('<div class="branding-section">', unsafe_allow_html=True)
+                        # st.markdown('<div class="branding-section">', unsafe_allow_html=True)
                         st.markdown('<p class="branding-title">Sponsored by</p>', unsafe_allow_html=True)
                         
                         # Create two columns for branding
@@ -309,8 +309,13 @@ with st.sidebar.form(key="user_info_form"):
     # Gender selection
     gender = st.selectbox("Gender", options=["Male", "Female"])
     
-    # Age range selection
-    age_range = st.selectbox("Age Range", options=["Under 20", "20 to 35", "35 to 45", "45+"])
+    # Age range selection - options depend on gender
+    if gender == "Female":
+        age_options = ["Under 20", "20 to 35", "35 to 45"]
+    else:
+        age_options = ["Under 20", "20 to 35", "35 to 45", "45+"]
+    
+    age_range = st.selectbox("Age Range", options=age_options)
     
     # Submit button
     submit_button = st.form_submit_button(label="Submit")

@@ -103,7 +103,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Add branding section at the top
-st.markdown('<div class="branding-section">', unsafe_allow_html=True)
+# st.markdown('<div class="branding-section">', unsafe_allow_html=True)
 # Create three columns for branding
 col1, col2, col3 = st.columns(3)
 

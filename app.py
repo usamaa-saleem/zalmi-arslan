@@ -121,7 +121,7 @@ with col1:
 with col2:
     try:
         st.markdown('<div class="branding-image">', unsafe_allow_html=True)
-        st.image("zalmi-logo-black.png", use_column_width=False)
+        st.image("zalmi-logo-black.png", use_column_width=False, width=150)
         st.markdown('</div>', unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Error displaying zalmi logo")

@@ -11,7 +11,7 @@ import time
 st.set_page_config(
     page_title="Zalmi Avatar",
     page_icon="📸",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="expanded"
 )
 
@@ -38,8 +38,7 @@ except:
 st.markdown("""
 <style>
     .main {
-        padding: 1rem;
-        max-width: 1200px !important;
+        padding: 2rem;
     }
     .stButton > button {
         width: 100%;
@@ -56,8 +55,7 @@ st.markdown("""
         border: 2px solid #f0f0f0;
         border-radius: 10px;
         padding: 10px;
-        margin-top: 10px;
-        margin-bottom: 10px;
+        margin-top: 20px;
     }
     .success-message {
         padding: 10px;
@@ -66,55 +64,6 @@ st.markdown("""
         border-radius: 5px;
         margin: 10px 0;
         font-weight: bold;
-    }
-    .branding-section {
-        background-color: #f9f9f9;
-        border-radius: 10px;
-        padding: 20px;
-        margin-top: 20px;
-        margin-bottom: 30px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-    }
-    .sponsor-title {
-        text-align: center;
-        font-size: 1.5rem;
-        color: #333;
-        margin-bottom: 15px;
-        font-weight: 600;
-    }
-    /* Style for branding columns */
-    .branding-col img {
-        margin-bottom: 15px;
-        margin-top: 15px;
-        display: block;
-        min-height: 150px;
-        object-fit: contain;
-    }
-    /* Make the center column stand out */
-    .center-result h3 {
-        text-align: center;
-        margin-bottom: 0.8rem;
-        font-size: 1.3rem;
-    }
-    /* Adjust column gap and width */
-    .row-widget.stHorizontal {
-        gap: 15px !important;
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    /* Ensure the container uses full width */
-    .block-container {
-        max-width: 100% !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-    }
-    /* Make all columns stretch to use available space */
-    [data-testid="column"] {
-        width: 100% !important;
-        flex: 1 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -155,23 +104,6 @@ def resize_image_if_needed(img, max_size=(800, 800), quality=85):
     
     return img_byte_arr.getvalue()
 
-# Function to safely load image from file
-def load_image_safely(image_path):
-    """
-    Load an image file safely, with error handling.
-    
-    Args:
-        image_path: Path to the image file
-        
-    Returns:
-        PIL.Image object or None if the image could not be loaded
-    """
-    try:
-        return Image.open(image_path)
-    except Exception as e:
-        print(f"Error loading image {image_path}: {e}")
-        return None
-
 # Function to process and format the submission
 def process_submission(image_data, gender, age_range):
     # Convert age range to format expected by API
@@ -199,7 +131,7 @@ def process_submission(image_data, gender, age_range):
         else:
             st.info(f"Base64 image size: {size_kb:.2f} KB")
             
-        st.success("Image encoded successfully!")
+        # st.success("Image encoded successfully!")
         
         # Use base64 image
         image_value = base64_image
@@ -268,53 +200,15 @@ def process_submission(image_data, gender, age_range):
                     if response_data.get("status") == "COMPLETED" and "output" in response_data and "result" in response_data["output"]:
                         result_image_url = response_data["output"]["result"][0]
                         
-                        # Add branding images side-by-side with the result
-                        st.markdown('<div class="branding-section">', unsafe_allow_html=True)
-                        st.markdown('<p class="sponsor-title">Zalmi Avatar - Sponsored by</p>', unsafe_allow_html=True)
+                        # Display the result image
+                        st.subheader("Generated Result:")
+                        st.markdown(f'<div class="result-img">', unsafe_allow_html=True)
+                        st.image(result_image_url, caption="Generated Image", use_column_width=True)
+                        st.markdown(f'</div>', unsafe_allow_html=True)
                         
-                        # Create a three-column layout
-                        left_brand_col, center_result_col, right_brand_col = st.columns([1.5, 2, 1.5])
-                        
-                        # Left column - Main branding image
-                        with left_brand_col:
-                            try:
-                                st.markdown('<div class="branding-col">', unsafe_allow_html=True)
-                                st.image("Main zalmi main cheezious.png", use_column_width=True)
-                                st.markdown('</div>', unsafe_allow_html=True)
-                            except Exception as e:
-                                st.error(f"Error displaying main branding image")
-                                print(f"Error with main branding image: {e}")
-                        
-                        # Center column - Generated result
-                        with center_result_col:
-                            st.markdown('<div class="center-result">', unsafe_allow_html=True)
-                            st.subheader("Generated Result:")
-                            st.markdown(f'<div class="result-img">', unsafe_allow_html=True)
-                            st.image(result_image_url, caption="Generated Image", use_column_width=True)
-                            st.markdown(f'</div>', unsafe_allow_html=True)
-                            
-                            # Provide a link to download the image
-                            st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
-                            st.markdown(f"[Download Generated Image]({result_image_url})", unsafe_allow_html=False)
-                            st.markdown('</div>', unsafe_allow_html=True)
-                            st.markdown('</div>', unsafe_allow_html=True)
-                        
-                        # Right column - Two stacked logos
-                        with right_brand_col:
-                            st.markdown('<div class="branding-col">', unsafe_allow_html=True)
-                            try:
-                                st.image("zalmi-logo-black.png", use_column_width=True)
-                            except Exception as e:
-                                st.error(f"Error displaying zalmi logo")
-                                print(f"Error with zalmi logo: {e}")
-                                
-                            try:
-                                st.image("cheezious_logo[1].png", use_column_width=True)
-                            except Exception as e:
-                                st.error(f"Error displaying cheezious logo")
-                                print(f"Error with cheezious logo: {e}")
-                            st.markdown('</div>', unsafe_allow_html=True)
-                        
+                        # Provide a link to download the image
+                        st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
+                        st.markdown(f"[Download Generated Image]({result_image_url})", unsafe_allow_html=False)
                         st.markdown('</div>', unsafe_allow_html=True)
                     else:
                         st.error("The API response did not contain a valid result.")

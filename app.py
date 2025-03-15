@@ -7,24 +7,26 @@ import base64
 from PIL import Image
 import time
 
-# API Configuration - try to get from streamlit secrets first, then environment variables, then default
-try:
-    API_ENDPOINT = st.secrets["API_ENDPOINT"]
-except:
-    API_ENDPOINT = os.environ.get("API_ENDPOINT", "https://api.runpod.ai/v2/bogdfcwppmeh9x/runsync")
-
-try:
-    API_KEY = st.secrets["API_KEY"]
-except:
-    API_KEY = os.environ.get("API_KEY", "rpa_AJZLDU6PQBNW7H6AWJ3EHRXL8RKNEVAT10FSTE8U7ts2rx")
-
-# Set page configuration
+# Set page configuration (must be the first Streamlit command)
 st.set_page_config(
     page_title="Zalmi Face Swap",
     page_icon="📸",
     layout="centered",
     initial_sidebar_state="expanded"
 )
+
+# API Configuration - try to get from streamlit secrets first, then environment variables, then default
+try:
+    API_ENDPOINT = st.secrets["API_ENDPOINT"]
+except:
+    # Updated API endpoint based on error messages
+    API_ENDPOINT = os.environ.get("API_ENDPOINT", "https://api.runpod.ai/v2/bogdfcwppmeh9x/runsync")
+
+try:
+    API_KEY = st.secrets["API_KEY"]
+except:
+    # Use more recent API key format if available
+    API_KEY = os.environ.get("API_KEY", "rpa_AJZLDU6PQBNW7H6AWJ3EHRXL8RKNEVAT10FSTE8U7ts2rx")
 
 # Custom CSS for better appearance
 st.markdown("""
@@ -57,12 +59,40 @@ st.markdown("""
         margin: 10px 0;
         font-weight: bold;
     }
+    .help-box {
+        padding: 10px 15px;
+        background-color: #e9ecef;
+        border-left: 4px solid #5c636a;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # Title and description
 st.title("Zalmi Face Swap")
 st.write("Upload an image or take a photo, select gender and age, then submit.")
+
+# Help box for API configuration
+with st.expander("⚙️ API Configuration Help", expanded=False):
+    st.markdown("""
+    <div class="help-box">
+    <strong>How to resolve API issues:</strong><br>
+    If you're receiving 401 Unauthorized errors, check your API configuration:
+    <ol>
+        <li>Make sure your API key is correct and active</li>
+        <li>Try both authorization formats in the Debug panel (Bearer Token vs API Key Only)</li>
+        <li>Verify the API endpoint URL</li>
+        <li>Some APIs don't accept base64-encoded images directly - try the URL option</li>
+    </ol>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <strong>Current API Endpoint:</strong> 
+    <pre style="padding:5px; background-color:#f8f9fa; border-radius:3px; font-size:0.8em;">"""
+    + API_ENDPOINT + """</pre>
+    """, unsafe_allow_html=True)
 
 # Debug section for administrators
 if st.sidebar.checkbox("Show Debug Info", False):

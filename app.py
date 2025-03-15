@@ -59,13 +59,6 @@ st.markdown("""
         margin: 10px 0;
         font-weight: bold;
     }
-    .help-box {
-        padding: 10px 15px;
-        background-color: #e9ecef;
-        border-left: 4px solid #5c636a;
-        border-radius: 4px;
-        margin-bottom: 15px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -73,28 +66,7 @@ st.markdown("""
 st.title("Zalmi Face Swap")
 st.write("Upload an image or take a photo, select gender and age, then submit.")
 
-# Help box for API configuration
-with st.expander("⚙️ API Configuration Help", expanded=False):
-    st.markdown("""
-    <div class="help-box">
-    <strong>How to resolve API issues:</strong><br>
-    If you're receiving 401 Unauthorized errors, check your API configuration:
-    <ol>
-        <li>Make sure your API key is correct and active</li>
-        <li>Try both authorization formats in the Debug panel (Bearer Token vs API Key Only)</li>
-        <li>Verify the API endpoint URL</li>
-        <li>Some APIs don't accept base64-encoded images directly - try the URL option</li>
-    </ol>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-    <strong>Current API Endpoint:</strong> 
-    <pre style="padding:5px; background-color:#f8f9fa; border-radius:3px; font-size:0.8em;">"""
-    + API_ENDPOINT + """</pre>
-    """, unsafe_allow_html=True)
-
-# Debug section for administrators
+# Debug section for administrators (only visible when debug mode is enabled)
 debug_mode = st.sidebar.checkbox("Show Debug Info", False, key="debug_main")
 
 if debug_mode:
@@ -260,22 +232,6 @@ def process_submission(image_data, gender, age_range):
             st.sidebar.info("Using API Key directly without Bearer prefix")
         else:
             auth_header = f"Bearer {API_KEY}"
-        
-        # Debug info about the request
-        with st.expander("Request Details", expanded=False):
-            st.write("**API Endpoint:**")
-            st.code(API_ENDPOINT)
-            st.write("**Authorization Header Format:**")
-            st.code(f"Authorization: {auth_header[:10]}...")
-            st.write("**Request Body Structure:**")
-            truncated_payload = {
-                "input": {
-                    "image": f"{image_value[:20]}... (truncated)",
-                    "gender": gender.lower(),
-                    "age": formatted_age
-                }
-            }
-            st.json(truncated_payload)
             
         # Send request to API
         with st.spinner("Processing your request... This may take a moment."):
@@ -311,28 +267,29 @@ def process_submission(image_data, gender, age_range):
                 else:
                     st.error(f"API request failed with status code {response.status_code}")
                     
-                    # Show detailed error information
-                    with st.expander("Error Details", expanded=True):
-                        st.write("**Response Headers:**")
-                        st.json(dict(response.headers))
-                        
-                        st.write("**Error Message:**")
-                        try:
-                            error_json = response.json()
-                            st.json(error_json)
-                        except:
-                            st.code(response.text)
-                        
-                        # Provide common error explanations
-                        if response.status_code == 401:
-                            st.warning("**401 Unauthorized**: This usually means your API key is invalid or incorrectly formatted.")
-                            st.info("Things to check: \n1. Make sure your API key is correct\n2. Check if the authorization format should be 'Bearer TOKEN' or just 'TOKEN'\n3. Verify you're using the correct API endpoint")
-                        elif response.status_code == 400:
-                            st.warning("**400 Bad Request**: The API didn't understand your request format.")
-                            st.info("The API might not accept base64 encoded images directly. You may need to revert to URL-based images.")
-                        elif response.status_code == 413:
-                            st.warning("**413 Payload Too Large**: Your base64 image is too large.")
-                            st.info("Try reducing the image size or quality further.")
+                    # Show detailed error information only in debug mode
+                    if debug_mode:
+                        with st.expander("Error Details", expanded=True):
+                            st.write("**Response Headers:**")
+                            st.json(dict(response.headers))
+                            
+                            st.write("**Error Message:**")
+                            try:
+                                error_json = response.json()
+                                st.json(error_json)
+                            except:
+                                st.code(response.text)
+                            
+                            # Provide common error explanations
+                            if response.status_code == 401:
+                                st.warning("**401 Unauthorized**: This usually means your API key is invalid or incorrectly formatted.")
+                                st.info("Things to check: \n1. Make sure your API key is correct\n2. Check if the authorization format should be 'Bearer TOKEN' or just 'TOKEN'\n3. Verify you're using the correct API endpoint")
+                            elif response.status_code == 400:
+                                st.warning("**400 Bad Request**: The API didn't understand your request format.")
+                                st.info("The API might not accept base64 encoded images directly. You may need to revert to URL-based images.")
+                            elif response.status_code == 413:
+                                st.warning("**413 Payload Too Large**: Your base64 image is too large.")
+                                st.info("Try reducing the image size or quality further.")
                             
             except requests.exceptions.RequestException as e:
                 st.error(f"Request error: {str(e)}")

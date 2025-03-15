@@ -87,10 +87,17 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: center;
+        height: 80px;  /* Fixed height for all image containers */
     }
     .branding-image img {
-        max-height: 100px;
+        max-height: 80px !important;  /* Force same max height */
+        width: auto !important;       /* Maintain aspect ratio */
         object-fit: contain;
+    }
+    /* Override Streamlit's default image sizing */
+    [data-testid="stImage"] {
+        width: auto !important;
+        max-width: 200px !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -104,7 +111,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     try:
         st.markdown('<div class="branding-image">', unsafe_allow_html=True)
-        st.image("Main zalmi main cheezious.png", use_column_width=True)
+        st.image("Main zalmi main cheezious.png", use_column_width=False)
         st.markdown('</div>', unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Error displaying main branding image")
@@ -114,7 +121,7 @@ with col1:
 with col2:
     try:
         st.markdown('<div class="branding-image">', unsafe_allow_html=True)
-        st.image("zalmi-logo-black.png", use_column_width=True)
+        st.image("zalmi-logo-black.png", use_column_width=False)
         st.markdown('</div>', unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Error displaying zalmi logo")
@@ -124,7 +131,7 @@ with col2:
 with col3:
     try:
         st.markdown('<div class="branding-image">', unsafe_allow_html=True)
-        st.image("cheezious_logo[1].png", use_column_width=True)
+        st.image("cheezious_logo[1].png", use_column_width=False)
         st.markdown('</div>', unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Error displaying cheezious logo")

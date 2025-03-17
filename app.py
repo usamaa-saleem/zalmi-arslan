@@ -143,6 +143,9 @@ st.markdown('</div>', unsafe_allow_html=True)
 st.title("Zalmi Avatar")
 st.write("Take a photo, select gender and age, then submit.")
 
+# Add tabs for webcam and upload options
+webcam_tab, upload_tab = st.tabs(["Webcam Capture", "Upload Image"])
+
 # Function to resize image if needed (to reduce base64 string size)
 def resize_image_if_needed(img, max_size=(800, 800), quality=85):
     """
@@ -298,24 +301,42 @@ image_data = None
 image_pil = None
 
 # Webcam capture section
-st.markdown('<p class="upload-header">Capture from Webcam</p>', unsafe_allow_html=True)
+with webcam_tab:
+    st.markdown('<p class="upload-header">Capture from Webcam</p>', unsafe_allow_html=True)
 
-# Use Streamlit's native camera input for smooth webcam functionality
-camera_image = st.camera_input("Take a picture", key="camera")
+    # Use Streamlit's native camera input for smooth webcam functionality
+    camera_image = st.camera_input("Take a picture", key="camera")
 
-if camera_image is not None:
-    # Display success message
-    st.markdown('<div class="success-message">Image captured successfully!</div>', unsafe_allow_html=True)
+    if camera_image is not None:
+        # Display success message
+        st.markdown('<div class="success-message">Image captured successfully!</div>', unsafe_allow_html=True)
+        
+        # Process the captured image
+        image_bytes = camera_image.getvalue()
+        image_pil = Image.open(io.BytesIO(image_bytes))
+        
+        # Store image data for later use (original, will be optimized during processing)
+        image_data = image_bytes
+
+# Image upload section
+with upload_tab:
+    st.markdown('<p class="upload-header">Upload an Image</p>', unsafe_allow_html=True)
     
-    # Process the captured image
-    image_bytes = camera_image.getvalue()
-    image_pil = Image.open(io.BytesIO(image_bytes))
+    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
     
-    # Display the captured image
-    # st.image(image_pil, caption="Captured Image", use_column_width=True)
-    
-    # Store image data for later use (original, will be optimized during processing)
-    image_data = image_bytes
+    if uploaded_file is not None:
+        # Display success message
+        st.markdown('<div class="success-message">Image uploaded successfully!</div>', unsafe_allow_html=True)
+        
+        # Process the uploaded image
+        image_bytes = uploaded_file.getvalue()
+        image_pil = Image.open(io.BytesIO(image_bytes))
+        
+        # Display the uploaded image
+        st.image(image_pil, caption="Uploaded Image", use_column_width=True)
+        
+        # Store image data for later use (original, will be optimized during processing)
+        image_data = image_bytes
 
 # Sidebar form for user information
 st.sidebar.title("Person Information")
